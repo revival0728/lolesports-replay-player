@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LoL Esports Replay Player</title>
+
+  <style>
+    body {
+      color: white;
+      background-color: black;
+      font-family: sans-serif;
+    }
+
+    .intro a {
+      color: #4287f5;
+    }
+
+    .video-container {
+      width: 100vw;
+      max-width: 100%;
+      background: #000;
+      color: white;
+      font-family: sans-serif;
+    }
+
+    .video-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+    }
+
+    #player {
+      width: 100%;
+      height: 100%;
+    }
+
+    #keyboard-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      outline: none;
+      background: transparent;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="bucket">
+    <div class="intro">
+      <h1>Welcome to LoL Esports Replay Player</h1>
+      <p>Because the native replay player of <a target="_blank" href="https://lolesports.com">LoL Esports</a> sucks to
+        me and
+        watching replays on YouTube itself is a spoiler, I
+        decided to make my
+        own LoL Esports replay player.</p>
+      <h2>Start to Watch Replay</h2>
+      <form method="get">
+        <input type="url" name="rp_url" placeholder="Enter YouTube URL here...">
+        <input type="submit" value="Replay the Match">
+      </form>
+      <h3>How to copy replay URLs without getting spoiler?</h3>
+      <ol>
+        <li>Go to <a target="_blank" href="https://lolesports.com">LoL Esports</a> and open the replay.</li>
+        <li>Make sure you are watching the replay on YouTube.</li>
+        <li>Play the replay and copy the URL by right clicking the YT title.
+      </ol>
+      <h2>Features</h2>
+      <ul>
+        <li>BP and champion status won't get cut off</li>
+        <li>Won't get spoiled because of progress bar</li>
+        <li>Livestream-like immersive experience</li>
+      </ul>
+      <h2>User Guide</h2>
+      <p>You can use keyboard to control the player.</p>
+      <ul>
+        <li><b>Space</b>: Play/Pause</li>
+        <li><b>Arrow Left/Right</b>: FF/Rewind 10 seconds</li>
+        <li><b>Arrow Up/Down</b>: Volume Up/Down</li>
+        <li><b>f</b>: FF 5 minutes (useful to skip between games)</li>
+        <li><b>Shift+f</b>: FF 1 hour (useful to skip between matches)</li>
+      </ul>
+      <p>If the keypress doesn't reponse, click the player by mouse to focus.</p>
+      <p><b>Make sure the browser tab of replay player is in full screen mode (like YouTube full screen).</b></p>
+      <h2>GitHub</h2>
+      <p>The source code of this website is available on <a target="_blank"
+          href="https://github.com/revival0728/lolesports-replay-player">GitHub</a>.</p>
+    </div>
+  </div>
+
+  <template id="player-template">
+    <div class="video-container">
+      <div class="video-frame">
+        <div id="player"></div>
+        <div id="keyboard-overlay" tabindex="0"></div>
+      </div>
+    </div>
+
+    <script>
+      // Load YouTube IFrame API
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(tag);
+
+      // Hide overflow contents
+      document.body.style = "overflow-y: hidden;";
+
+      let player;
+      let timer;
+
+      const overlay = document.getElementById("keyboard-overlay");
+      const iframe = document.getElementById("player");
+
+      overlay.addEventListener("keydown", handleKeyboard);
+      overlay.focus();
+
+      let isSeeking = false;
+
+      function formatTime(seconds) {
+        const s = Math.floor(seconds || 0);
+        const m = Math.floor(s / 60);
+        const sec = s % 60;
+
+        return `${m}:${String(sec).padStart(2, "0")}`;
+      }
+
+      // YouTube API ready
+      function onYouTubeIframeAPIReady() {
+        const videoId = iframe.dataset.v;
+        player = new YT.Player("player", {
+          videoId,
+          playerVars: {
+            controls: 0,
+            disablekb: 1,
+            playsinline: 1,
+            rel: 0,
+            cc_load_policy: 0,
+          },
+          events: {
+            onReady: onPlayerReady,
+            onPlaybackQualityChange: onQualityChange,
+          }
+        });
+      }
+
+      function onPlayerReady() {
+        iframe.click();
+        player.playVideo();
+      }
+
+      function onQualityChange(event) {
+        console.log(`Current Quality: ${event.data}`);
+      }
+
+      // Keyboard Controls
+      function handleKeyboard(event) {
+        if (!player || !player.getDuration) return;
+
+        // 避免影響輸入框、文字區域
+        if (
+          event.target instanceof HTMLInputElement ||
+          event.target instanceof HTMLTextAreaElement ||
+          event.target.isContentEditable
+        ) {
+          return;
+        }
+
+        const currentTime = player.getCurrentTime();
+        const duration = player.getDuration();
+        const volume = player.getVolume();
+
+        switch (event.key) {
+          case "ArrowLeft":
+            event.preventDefault();
+            player.seekTo(
+              Math.max(0, currentTime - 10),
+              true
+            );
+            break;
+
+          case "ArrowRight":
+            event.preventDefault();
+            player.seekTo(
+              Math.min(duration, currentTime + 10),
+              true
+            );
+            break;
+
+          case "ArrowUp":
+            event.preventDefault();
+            player.setVolume(
+              Math.min(100, volume + 10)
+            );
+            break;
+
+          case "ArrowDown":
+            event.preventDefault();
+            player.setVolume(
+              Math.max(0, volume - 10)
+            );
+            break;
+
+          case " ":
+            event.preventDefault();
+            if (player.getPlayerState() === YT.PlayerState.PLAYING) {
+              player.pauseVideo();
+            } else {
+              player.playVideo();
+            }
+            break;
+
+          case "f":
+            event.preventDefault();
+            player.seekTo(
+              Math.min(duration, currentTime + 300),
+              true
+            );
+            break;
+
+          case "F":
+            event.preventDefault();
+            player.seekTo(
+              Math.min(duration, currentTime + 3600),
+              true
+            );
+            break;
+        }
+      };
+    </script>
+  </template>
+
+  <script>
+    const bucket = document.getElementById("bucket");
+    const playerTemplate = document.getElementById("player-template");
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.has("rp_url")) {
+      const raw_url = params.get("rp_url");
+      const url = new URL(raw_url);
+      const url_params = url.searchParams;
+      if (url_params.has("v")) {
+        const vid = url_params.get("v");
+        const player = playerTemplate.content.cloneNode(true);
+        player.getElementById("player").dataset.v = vid;
+        bucket.innerHTML = "";
+        bucket.appendChild(player);
+      } else {
+        alert("Invalid Replay URL!");
+      }
+    }
+  </script>
+</body>
+
+</html>
