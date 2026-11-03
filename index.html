@@ -80,6 +80,8 @@
         <li><b>Arrow Up/Down</b>: Volume Up/Down</li>
         <li><b>f</b>: FF 5 minutes (useful to skip between games)</li>
         <li><b>Shift+f</b>: FF 1 hour (useful to skip between matches)</li>
+        <li><b>r</b>: Rewind 5 minutes</li>
+        <li><b>Shift+r</b>: Rewind 1 hour</li>
       </ul>
       <p>If the keypress doesn't reponse, click the player by mouse to focus.</p>
       <p><b>Make sure the browser tab of replay player is in full screen mode (like YouTube full screen).</b></p>
@@ -222,6 +224,22 @@
             event.preventDefault();
             player.seekTo(
               Math.min(duration, currentTime + 3600),
+              true
+            );
+            break;
+
+          case "r":
+            event.preventDefault();
+            player.seekTo(
+              Math.min(duration, currentTime - 300),
+              true
+            );
+            break;
+
+          case "R":
+            event.preventDefault();
+            player.seekTo(
+              Math.min(duration, currentTime - 3600),
               true
             );
             break;

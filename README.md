@@ -37,6 +37,8 @@ Because the native replay player of [LoL Esports](https://lolesports.com) sucks 
 | `Arrow Up` / `Arrow Down` | Volume Up / Down |
 | `f` | Fast-Forward 5 minutes (skip breaks between games) |
 | `Shift` + `f` | Fast-Forward 1 hour (skip to next match) |
+| `r` | Rewind 5 minutes |
+| `Shift` + `r` |  Rewind 1 hour |
 
 > **Tips:**
 > - If keyboard controls do not respond, click inside the player window to focus.
