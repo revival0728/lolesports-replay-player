@@ -129,21 +129,25 @@
 
       // YouTube API ready
       function onYouTubeIframeAPIReady() {
-        const videoId = iframe.dataset.v;
-        player = new YT.Player("player", {
-          videoId,
-          playerVars: {
-            controls: 0,
-            disablekb: 1,
-            playsinline: 1,
-            rel: 0,
-            cc_load_policy: 0,
-          },
-          events: {
-            onReady: onPlayerReady,
-            onPlaybackQualityChange: onQualityChange,
-          }
-        });
+        try {
+          const videoId = iframe.dataset.v;
+          player = new YT.Player("player", {
+            videoId,
+            playerVars: {
+              controls: 0,
+              disablekb: 1,
+              playsinline: 1,
+              rel: 0,
+              cc_load_policy: 0,
+            },
+            events: {
+              onReady: onPlayerReady,
+              onPlaybackQualityChange: onQualityChange,
+            }
+          });
+        } catch {
+          reportInvalidURL();
+        }
       }
 
       function onPlayerReady() {
@@ -264,8 +268,14 @@
         bucket.innerHTML = "";
         bucket.appendChild(player);
       } else {
-        alert("Invalid Replay URL!");
+        reportInvalidURL();
       }
+    }
+
+    function reportInvalidURL() {
+      alert("Invalid Replay URL!");
+      const home = window.location.origin + window.location.pathname;
+      window.location.replace(home);
     }
   </script>
 </body>
